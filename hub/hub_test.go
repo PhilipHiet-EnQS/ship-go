@@ -93,6 +93,23 @@ func (s *HubSuite) Test_NewConnectionsHub() {
 	hub.Shutdown()
 }
 
+func (s *HubSuite) Test_NewConnectionsHub_DynPort() {
+	ski := "12af9e"
+	localService := api.NewServiceDetails(ski)
+
+	hub := NewHub(s.hubReader, s.mdnsService, 0, tls.Certificate{}, localService)
+	assert.NotNil(s.T(), hub)
+
+	s.mdnsService.EXPECT().Start(gomock.Any()).Return(nil).Times(1)
+	s.mdnsService.EXPECT().SetPort(gomock.Not(0)).Times(1)
+
+	hub.Start()
+
+	s.mdnsService.EXPECT().Shutdown().Times(1)
+
+	hub.Shutdown()
+}
+
 func (s *HubSuite) Test_AutoAccept() {
 	s.mdnsService.EXPECT().SetAutoAccept(gomock.Any()).Return().AnyTimes()
 

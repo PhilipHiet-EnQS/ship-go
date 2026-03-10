@@ -38,6 +38,8 @@ type MdnsInterface interface {
 	QRCodeText() string
 
 	RequestMdnsEntries()
+
+	SetPort(int)
 }
 
 // implemented by mdns, used by Providers

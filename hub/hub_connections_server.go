@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -51,7 +52,27 @@ func (h *Hub) verifyPeerCertificate(rawCerts [][]byte, verifiedChains [][]*x509.
 // startWebsocketServer starts the SHIP websocket server
 func (h *Hub) startWebsocketServer() error {
 	addr := fmt.Sprintf(":%d", h.port)
-	logging.Log().Debug("starting websocket server on", addr)
+	logging.Log().Debug("attempting to start websocket server on", addr)
+
+	// If h.port is 0, net.Listen will assign a free port.
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("failed to listen on %s: %w", addr, err)
+	}
+	if h.port == 0 {
+
+		// Get the actual assigned port from the listener's address.
+		tcpAddr, ok := listener.Addr().(*net.TCPAddr)
+		if !ok {
+			listener.Close()
+			return fmt.Errorf("listener address is not a TCP address: %v", listener.Addr())
+		}
+		h.port = tcpAddr.Port
+
+		// Log the final address, which will show the dynamic port if one was used.
+		addr = fmt.Sprintf(":%d", h.port)
+		logging.Log().Debug("websocket server listener created on", addr)
+	}
 
 	h.httpServer = &http.Server{
 		Addr:              addr,
@@ -67,7 +88,7 @@ func (h *Hub) startWebsocketServer() error {
 	}
 
 	go func() {
-		err := h.httpServer.ListenAndServeTLS("", "")
+		err := h.httpServer.ServeTLS(listener, "", "")
 		if err != nil && err != http.ErrServerClosed {
 			logging.Log().Error("websocket server error:", err)
 			h.serverStartErr = err

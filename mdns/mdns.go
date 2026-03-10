@@ -396,6 +396,10 @@ func (m *MdnsManager) SetAutoAccept(accept bool) {
 	m.setIsServiceAnnounce(false)
 }
 
+func (m *MdnsManager) SetPort(port int) {
+	m.port = port
+}
+
 // SetTestProvider injects a mock provider for testing purposes
 func (m *MdnsManager) SetTestProvider(provider api.MdnsProviderInterface) {
 	m.testProvider = provider

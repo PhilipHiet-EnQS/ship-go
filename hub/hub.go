@@ -125,6 +125,7 @@ func (h *Hub) Start() error {
 	}
 
 	// start mDNS
+	h.mdns.SetPort(h.port)
 	if err := h.mdns.Start(h); err != nil {
 		// Shutdown the server if mDNS fails
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
